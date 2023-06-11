@@ -1,3 +1,4 @@
+#ifdef SUPERPRO_WINMM_BUILD
 #define MMNOSOUND
 #include <Windows.h>
 
@@ -6,3 +7,4 @@ extern "C" {
 		return TRUE;
 	}
 }
+#endif
