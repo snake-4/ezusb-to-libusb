@@ -12,10 +12,39 @@ LIBUSBDevice::InternalHandle::~InternalHandle()
 LIBUSBDevice::InternalHandle::InternalHandle(libusb_device_handle* val)
 	: val(val) { }
 
+
+static libusb_device_handle* OpenDeviceByVIDPID(uint16_t vid, uint16_t pid)
+{
+	libusb_device** deviceList;
+	int count = libusb_get_device_list(GLibUsbCtx, &deviceList);
+	if (count < 0) {
+		return nullptr;
+	}
+
+	for (int i = 0; i < count; i++) {
+		libusb_device* device = deviceList[i];
+		struct libusb_device_descriptor desc;
+		if (libusb_get_device_descriptor(device, &desc) == LIBUSB_SUCCESS) {
+			if (desc.idVendor == vid && desc.idProduct == pid) {
+				libusb_device_handle* handle = nullptr;
+				int status = libusb_open(device, &handle);
+				if (status != LIBUSB_SUCCESS) {
+					std::cout << "libusb_open() error: " << libusb_strerror(status) << '\n';
+				}
+				libusb_free_device_list(deviceList, 1);
+				return handle;
+			}
+		}
+	}
+
+	libusb_free_device_list(deviceList, 1);
+	return nullptr;
+}
+
 LIBUSBDevice::LIBUSBDevice(int vid, int pid, int timeout_ms, int configIdx, int interfaceIdx, int altsetting)
 	: vid(vid), pid(pid), configIdx(configIdx), interfaceIdx(interfaceIdx), interfaceDesc(nullptr), timeout_ms(timeout_ms)
 {
-	auto newHandle = libusb_open_device_with_vid_pid(GLibUsbCtx, vid, pid);
+	auto newHandle = OpenDeviceByVIDPID(vid, pid);
 	if (newHandle == nullptr) {
 		return;
 	}
@@ -36,7 +65,7 @@ int LIBUSBDevice::WriteControlTransfer(uint8_t request_type, uint8_t bRequest, u
 	const void* buffer, uint16_t bufferLength)
 {
 	if (handle == nullptr) {
-		return 0;
+		return LIBUSB_ERROR_NO_DEVICE;
 	}
 
 	return libusb_control_transfer(handle->val, request_type | LIBUSB_ENDPOINT_OUT, bRequest, wValue, wIndex, (unsigned char*)buffer, bufferLength, timeout_ms);
@@ -46,7 +75,7 @@ int LIBUSBDevice::ReadControlTransfer(uint8_t request_type, uint8_t bRequest, ui
 	const void* buffer, uint16_t bufferLength)
 {
 	if (handle == nullptr) {
-		return 0;
+		return LIBUSB_ERROR_NO_DEVICE;
 	}
 
 	return libusb_control_transfer(handle->val, request_type | LIBUSB_ENDPOINT_IN, bRequest, wValue, wIndex, (unsigned char*)buffer, bufferLength, timeout_ms);

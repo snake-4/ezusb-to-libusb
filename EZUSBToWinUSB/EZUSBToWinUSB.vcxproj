@@ -19,13 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="Hooks.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="TranslationLayer.cpp" />
+    <ClCompile Include="Utils.cpp" />
     <ClCompile Include="WinmmExports.cpp" />
     <ClCompile Include="LibusbDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="EZUSB\ezusbsys_internal.h" />
     <ClInclude Include="EZUSB\ezusb.h" />
     <ClInclude Include="Globals.h" />
@@ -33,6 +36,7 @@
     <ClInclude Include="Hooks.h" />
     <ClInclude Include="LibusbDevice.h" />
     <ClInclude Include="TranslationLayer.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

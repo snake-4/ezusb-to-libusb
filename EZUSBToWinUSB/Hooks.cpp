@@ -11,8 +11,7 @@ HANDLE WINAPI hkCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSh
 	LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes,
 	HANDLE hTemplateFile)
 {
-	if (strcmp(lpFileName, "\\\\.\\Ezusb-0") != 0 &&
-		strcmp(lpFileName, "\\\\.\\Xeltekusb-0") != 0)
+	if (lpFileName != GConfig.EZUSBDriverPath)
 	{
 		return origCreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
 			dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);

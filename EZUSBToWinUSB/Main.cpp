@@ -4,11 +4,14 @@
 #include <optional>
 #include "Hooks.h"
 #include "Globals.h"
+#include "Config.h"
+#include "Utils.h"
 #include "EZUSB/ezusb.h"
 
 HandleManager_t GHandleManager;
 libusb_context* GLibUsbCtx = nullptr;
 std::optional<LIBUSBDevice> GUSBDev;
+Configuration_t GConfig = Configuration_t::LoadFromIniFile("eu2wu_config.ini");
 
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 {
@@ -29,8 +32,17 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 		AttachHooks();
 		DetourTransactionCommit();
 
+		if (GConfig.Debug > 0) {
+			AllocConsole();
+			BindCrtHandlesToStdHandles(true, true, true);
+			_putenv("LIBUSB_DEBUG=4");
+		}
+
 		libusb_init(&GLibUsbCtx);
-		GUSBDev.emplace(LIBUSBDevice(0x6022, 0x0001, 10000, 0, EZUSB::USB_INTERFACE_INDEX, EZUSB::USB_INTERFACE_ALTERNATE_SETTING));
+		GUSBDev.emplace(
+			GConfig.USBVID, GConfig.USBPID, GConfig.USBTimeoutMS, GConfig.USBConfigIndex,
+			EZUSB::USB_INTERFACE_INDEX, EZUSB::USB_INTERFACE_ALTERNATE_SETTING
+		);
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
 	{

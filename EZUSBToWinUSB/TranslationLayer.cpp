@@ -32,11 +32,11 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		if (inBufferLen < sizeof(VENDOR_REQUEST_IN))
 			return ERROR_INVALID_PARAMETER;
 
-		auto req = (PVENDOR_REQUEST_IN)inBuffer;
+		auto req = reinterpret_cast<PVENDOR_REQUEST_IN>(inBuffer);
 		int status = 0;
 		if (req->direction) {
 			status = GUSBDev.value().ReadControlTransfer(LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE,
-				req->bRequest, req->wValue, req->wIndex, (unsigned char*)inBuffer, req->wLength); //nInBufferSize);
+				req->bRequest, req->wValue, req->wIndex, inBuffer, req->wLength); //nInBufferSize);
 		}
 		else {
 			std::vector<uint8_t> writeBuffer(req->wLength, 0);
@@ -53,7 +53,7 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		if (status < 0)
 			return ERROR_GEN_FAILURE;
 		else
-			return { ERROR_SUCCESS, (DWORD)status };
+			return { ERROR_SUCCESS, static_cast<DWORD>(status) };
 	} },
 
 	{ IOCTL_EZUSB_BULK_READ, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -63,14 +63,14 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		if (inBufferLen < sizeof(BULK_TRANSFER_CONTROL))
 			return ERROR_INVALID_PARAMETER;
 
-		auto bulkControl = (PBULK_TRANSFER_CONTROL)inBuffer;
+		auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
 		int bytesRead;
 
-		int err = GUSBDev.value().ReadBulkTransfer(bulkControl->pipeNum, outBuffer, outBufferLen, &bytesRead);
+		int err = GUSBDev.value().ReadBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesRead);
 		if (err != LIBUSB_SUCCESS)
 			return ERROR_GEN_FAILURE;
 		else
-			return { ERROR_SUCCESS, (DWORD)bytesRead };
+			return { ERROR_SUCCESS, static_cast<DWORD>(bytesRead) };
 	} },
 
 	{ IOCTL_EZUSB_BULK_WRITE, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -80,14 +80,14 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		if (inBufferLen < sizeof(BULK_TRANSFER_CONTROL))
 			return ERROR_INVALID_PARAMETER;
 
-		auto bulkControl = (PBULK_TRANSFER_CONTROL)inBuffer;
+		auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
 		int bytesWritten;
 
-		int err = GUSBDev.value().WriteBulkTransfer(bulkControl->pipeNum, outBuffer, outBufferLen, &bytesWritten);
+		int err = GUSBDev.value().WriteBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesWritten);
 		if (err != LIBUSB_SUCCESS)
 			return ERROR_GEN_FAILURE;
 		else
-			return { ERROR_SUCCESS, (DWORD)bytesWritten };
+			return { ERROR_SUCCESS, static_cast<DWORD>(bytesWritten) };
 	} },
 
 	{ IOCTL_Ezusb_RESETPIPE, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -113,7 +113,7 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		if (inBufferLen < sizeof(ANCHOR_DOWNLOAD_CONTROL))
 			return ERROR_INVALID_PARAMETER;
 
-		auto req = (PANCHOR_DOWNLOAD_CONTROL)inBuffer;
+		auto req = reinterpret_cast<PANCHOR_DOWNLOAD_CONTROL>(inBuffer);
 
 		int chunkCount = ((outBufferLen + ANCHOR_DOWNLOAD_CHUNK_SIZE - 1) / ANCHOR_DOWNLOAD_CHUNK_SIZE);
 		for (int i = 0; i < chunkCount; i++)
@@ -125,7 +125,7 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 			uint8_t bRequest = ANCHOR_LOAD_INTERNAL;
 			uint16_t wValue = (i * ANCHOR_DOWNLOAD_CHUNK_SIZE) + req->Offset;
 
-			const void* bufferAddr = (uint8_t*)outBuffer + i * ANCHOR_DOWNLOAD_CHUNK_SIZE;
+			const void* bufferAddr = reinterpret_cast<uint8_t*>(outBuffer) + i * ANCHOR_DOWNLOAD_CHUNK_SIZE;
 			int transferred = GUSBDev.value().WriteControlTransfer(
 				LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE, bRequest, wValue, 0, bufferAddr, wLength
 			);
@@ -160,14 +160,14 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 
 		int status = 0;
 		if (req->direction)
-			status = GUSBDev.value().ReadControlTransfer(requestType, req->request, req->value, req->index, outBuffer, outBufferLen);
+			status = GUSBDev.value().ReadControlTransfer(requestType, req->request, req->value, req->index, outBuffer, static_cast<uint16_t>(outBufferLen));
 		else
-			status = GUSBDev.value().WriteControlTransfer(requestType, req->request, req->value, req->index, outBuffer, outBufferLen);
+			status = GUSBDev.value().WriteControlTransfer(requestType, req->request, req->value, req->index, outBuffer, static_cast<uint16_t>(outBufferLen));
 
 		if (status < 0)
 			return ERROR_GEN_FAILURE;
 		else
-			return { ERROR_SUCCESS, (DWORD)status };
+			return { ERROR_SUCCESS, static_cast<DWORD>(status) };
 	} },
 
 	{ IOCTL_EZUSB_GET_DRIVER_VERSION, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {

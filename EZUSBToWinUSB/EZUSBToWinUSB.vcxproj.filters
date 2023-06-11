@@ -6,6 +6,8 @@
     <ClCompile Include="Hooks.cpp" />
     <ClCompile Include="LibusbDevice.cpp" />
     <ClCompile Include="TranslationLayer.cpp" />
+    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hooks.h" />
@@ -19,6 +21,8 @@
       <Filter>EZUSB</Filter>
     </ClInclude>
     <ClInclude Include="Globals.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="EZUSB">
