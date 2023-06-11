@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="WinmmExports.cpp" />
+    <ClCompile Include="Hooks.cpp" />
+    <ClCompile Include="LibusbDevice.cpp" />
+    <ClCompile Include="TranslationLayer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Hooks.h" />
+    <ClInclude Include="TranslationLayer.h" />
+    <ClInclude Include="HandleManager.h" />
+    <ClInclude Include="LibusbDevice.h" />
+    <ClInclude Include="EZUSB\ezusbsys_internal.h">
+      <Filter>EZUSB</Filter>
+    </ClInclude>
+    <ClInclude Include="EZUSB\ezusb.h">
+      <Filter>EZUSB</Filter>
+    </ClInclude>
+    <ClInclude Include="Globals.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="EZUSB">
+      <UniqueIdentifier>{15d15206-47e6-4cfe-80ef-b3098cd06fbc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
