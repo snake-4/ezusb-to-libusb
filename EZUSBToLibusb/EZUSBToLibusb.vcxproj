@@ -44,7 +44,7 @@
     <ProjectGuid>{f76de567-af07-4689-8309-c153cd53f9da}</ProjectGuid>
     <RootNamespace>EZUSBToWinUSB</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>EZUSBToWinUSB</ProjectName>
+    <ProjectName>EZUSBToLibusb</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

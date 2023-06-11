@@ -11,7 +11,7 @@
 HandleManager_t GHandleManager;
 libusb_context* GLibUsbCtx = nullptr;
 std::optional<LIBUSBDevice> GUSBDev;
-Configuration_t GConfig = Configuration_t::LoadFromIniFile("eu2wu_config.ini");
+Configuration_t GConfig = Configuration_t::LoadFromIniFile("eu2lu_config.ini");
 
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 {
