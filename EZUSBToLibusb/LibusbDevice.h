@@ -16,6 +16,8 @@ public:
 	int ReadBulkTransfer(int pipeNum, void* buffer, int bufferLength, int* bytesRead);
 	int WriteBulkTransfer(int pipeNum, const void* buffer, int bufferLength, int* bytesWritten);
 
+	bool IsConnected();
+
 private:
 	int GetEndpointAddressByPipeNum(int pipeNum);
 

@@ -101,6 +101,11 @@ int LIBUSBDevice::WriteBulkTransfer(int pipeNum, const void* buffer, int bufferL
 		(unsigned char*)(buffer), bufferLength, bytesWritten, timeout_ms);
 }
 
+bool LIBUSBDevice::IsConnected()
+{
+	return handle != nullptr;
+}
+
 int LIBUSBDevice::GetEndpointAddressByPipeNum(int pipeNum) {
 	if (pipeNum >= interfaceDesc->bNumEndpoints) {
 		return -1;
