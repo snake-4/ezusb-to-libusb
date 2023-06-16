@@ -80,7 +80,7 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_VENDOR_REQUEST(LPVOID inBuffer, DWORD inB
 	}
 
 	if (status > 0)
-		return { ERROR_SUCCESS, static_cast<DWORD>(status) };
+		return { ERROR_SUCCESS, static_cast<DWORD>(status) }; //lpBytesReturned is only set if not 0
 	else
 		return ERROR_SUCCESS;
 }
@@ -91,10 +91,14 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_READ(LPVOID inBuffer, DWORD inBuffer
 		return ERROR_INVALID_PARAMETER;
 
 	auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
-	int bytesRead; //bytesRead is ignored
+	int bytesRead;
 
 	int err = GUSBDev.value().ReadBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesRead);
-	return (err == LIBUSB_SUCCESS ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
+
+	if (err != LIBUSB_SUCCESS)
+		return ERROR_GEN_FAILURE;
+	else
+		return { ERROR_SUCCESS, static_cast<DWORD>(bytesRead) };
 }
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_WRITE(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
@@ -103,10 +107,14 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_WRITE(LPVOID inBuffer, DWORD inBuffe
 		return ERROR_INVALID_PARAMETER;
 
 	auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
-	int bytesWritten; //bytesWritten is ignored
+	int bytesWritten;
 
 	int err = GUSBDev.value().WriteBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesWritten);
-	return (err == LIBUSB_SUCCESS ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
+
+	if (err != LIBUSB_SUCCESS)
+		return ERROR_GEN_FAILURE;
+	else
+		return { ERROR_SUCCESS, static_cast<DWORD>(bytesWritten) };
 }
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_VENDOR_OR_CLASS_REQUEST(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
@@ -133,7 +141,10 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_VENDOR_OR_CLASS_REQUEST(LPVOID inBuffer, 
 	else
 		status = GUSBDev.value().WriteControlTransfer(requestType, req->request, req->value, req->index, outBuffer, static_cast<uint16_t>(outBufferLen));
 
-	return (status >= 0 ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
+	if (status < 0)
+		return ERROR_GEN_FAILURE;
+	else
+		return { ERROR_SUCCESS, static_cast<DWORD>(status) };
 }
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_GET_DRIVER_VERSION(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
