@@ -17,13 +17,16 @@ HANDLE WINAPI hkCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSh
 			dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	}
 
+	if (!GUSBDev.has_value()) {
+		SetLastError(ERROR_FILE_NOT_FOUND);
+		return INVALID_HANDLE_VALUE;
+	}
+
 	HANDLE reservedHandle;
 	HANDLE currentProc = GetCurrentProcess();
 	DuplicateHandle(currentProc, INVALID_HANDLE_VALUE, currentProc, &reservedHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
 	GHandleManager.RegisterHandle(reservedHandle);
-
-	SetLastError(ERROR_SUCCESS);
 	return reservedHandle;
 }
 
@@ -40,9 +43,12 @@ BOOL WINAPI hkDeviceIoControl(HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpIn
 
 	DWORD err = TL::TranslateIOTCL(hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer,
 		nOutBufferSize, lpBytesReturned);
-	SetLastError(err);
+	if (err != ERROR_SUCCESS) {
+		SetLastError(err);
+		return FALSE;
+	}
 
-	return err == ERROR_SUCCESS;
+	return TRUE;
 }
 
 BOOL(WINAPI* origCloseHandle)(HANDLE) = CloseHandle;

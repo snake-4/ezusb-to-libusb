@@ -50,10 +50,10 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 			status = std::max(status, 0); //lpBytesReturned is 0 on these requests
 		}
 
-		if (status < 0)
-			return ERROR_GEN_FAILURE;
-		else
+		if (status > 0)
 			return { ERROR_SUCCESS, static_cast<DWORD>(status) };
+		else
+			return ERROR_SUCCESS;
 	} },
 
 	{ IOCTL_EZUSB_BULK_READ, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -64,13 +64,10 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 			return ERROR_INVALID_PARAMETER;
 
 		auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
-		int bytesRead;
+		int bytesRead; //bytesRead is ignored
 
 		int err = GUSBDev.value().ReadBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesRead);
-		if (err != LIBUSB_SUCCESS)
-			return ERROR_GEN_FAILURE;
-		else
-			return { ERROR_SUCCESS, static_cast<DWORD>(bytesRead) };
+		return (err == LIBUSB_SUCCESS ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
 	} },
 
 	{ IOCTL_EZUSB_BULK_WRITE, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -81,13 +78,10 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 			return ERROR_INVALID_PARAMETER;
 
 		auto req = reinterpret_cast<PBULK_TRANSFER_CONTROL>(inBuffer);
-		int bytesWritten;
+		int bytesWritten; //bytesWritten is ignored
 
 		int err = GUSBDev.value().WriteBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesWritten);
-		if (err != LIBUSB_SUCCESS)
-			return ERROR_GEN_FAILURE;
-		else
-			return { ERROR_SUCCESS, static_cast<DWORD>(bytesWritten) };
+		return (err == LIBUSB_SUCCESS ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
 	} },
 
 	{ IOCTL_Ezusb_RESETPIPE, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -108,11 +102,10 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		/*
 		* IOCTL_EZUSB_ANCHOR_DOWNLOAD
 		*/
-		static constexpr uint16_t ANCHOR_DOWNLOAD_CHUNK_SIZE = 64;
-
 		if (inBufferLen < sizeof(ANCHOR_DOWNLOAD_CONTROL))
 			return ERROR_INVALID_PARAMETER;
 
+		static constexpr uint16_t ANCHOR_DOWNLOAD_CHUNK_SIZE = 64;
 		auto req = reinterpret_cast<PANCHOR_DOWNLOAD_CONTROL>(inBuffer);
 
 		int chunkCount = ((outBufferLen + ANCHOR_DOWNLOAD_CHUNK_SIZE - 1) / ANCHOR_DOWNLOAD_CHUNK_SIZE);
@@ -164,10 +157,7 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		else
 			status = GUSBDev.value().WriteControlTransfer(requestType, req->request, req->value, req->index, outBuffer, static_cast<uint16_t>(outBufferLen));
 
-		if (status < 0)
-			return ERROR_GEN_FAILURE;
-		else
-			return { ERROR_SUCCESS, static_cast<DWORD>(status) };
+		return (status >= 0 ? ERROR_SUCCESS : ERROR_GEN_FAILURE);
 	} },
 
 	{ IOCTL_EZUSB_GET_DRIVER_VERSION, [](LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen) -> ioctl_handler_return_t {
@@ -175,7 +165,7 @@ std::unordered_map<DWORD, ioctl_handler_t> ioctl_handler_map {
 		* IOCTL_EZUSB_GET_DRIVER_VERSION
 		*/
 		if (outBufferLen < sizeof(EZUSB_DRIVER_VERSION))
-			return ERROR_INVALID_PARAMETER;
+			return ERROR_GEN_FAILURE; //This function returns STATUS_UNSUCCESSFUL instead of invalid parameter
 
 		PEZUSB_DRIVER_VERSION version = (PEZUSB_DRIVER_VERSION)outBuffer;
 		version->MajorVersion = EZUSB_MAJOR_VERSION;
