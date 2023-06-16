@@ -93,8 +93,7 @@ std::vector<uint8_t> LIBUSBDevice::GetStringDescriptor(uint8_t desc_index, uint1
 	return vec;
 }
 
-bool LIBUSBDevice::ReopenDevice()
-{
+bool LIBUSBDevice::ReopenDevice() {
 	auto newDev = LIBUSBDevice::OpenDevice(vid, pid, timeout_ms, configIdx, interfaceIdx, altsetting);
 	if (!newDev.has_value()) {
 		return false;
@@ -104,6 +103,10 @@ bool LIBUSBDevice::ReopenDevice()
 }
 
 int LIBUSBDevice::ResetDevice() {
+	if (handle == nullptr) {
+		return LIBUSB_ERROR_NO_DEVICE;
+	}
+
 	int status = libusb_reset_device(handle->val);
 	if (status == LIBUSB_ERROR_NOT_FOUND) {
 		handle = nullptr;
