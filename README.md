@@ -28,13 +28,12 @@ This library hooks various WinAPI functions in an attempt to emulate the EZ-USB 
 1. Uninstall any existing driver for the SuperPro device. To do this, open the Device Manager, locate the SuperPro device, right-click on it, select "Uninstall," and make sure to check the checkbox that says "Attempt to remove the driver for this device."
 1. Install the WinUSB driver for the SuperPro device. You can use <a href="https://zadig.akeo.ie/">Zadig</a>, which provides a usage guide available at <a href="https://github.com/pbatard/libwdi/wiki/Zadig#user-content-Basic_usage">this link</a>.
 1. Download the <a href="https://github.com/snake-4/EZUSBToLibusb/releases">latest SuperPro release</a>, and extract the files from the zip to the folder where the `SP3000.exe` is located.
-1. Update the VID and PID values in the `eu2lu_config.ini` file. To do that, follow these steps: Open Device Manager, locate the SuperPro device, right-click and select "Properties," go to the "Details" tab, choose "Hardware Ids" from the drop-down menu, note the VID and PID values, and update them in the `eu2lu_config.ini` file.
 
 ### For other devices:
 
 1. Install the WinUSB driver for your  device. You can use <a href="https://zadig.akeo.ie/">Zadig</a>, which provides a usage guide available at <a href="https://github.com/pbatard/libwdi/wiki/Zadig#user-content-Basic_usage">this link</a>.
 1. Download the <a href="https://github.com/snake-4/EZUSBToLibusb/releases">latest generic release</a>.
-1. Modify the `eu2lu_config.ini` file to reflect the correct VID and PID values for your device. After making the modifications, move the file to the folder where your target software is located.
+1. Modify the `eu2lu_config.json` file to reflect the correct VID and PID values for your device. After making the modifications, move the file to the folder where your target software is located.
 1. Inject the `EZUSBToLibusb.dll` file into your target software. The process for injecting the DLL may vary depending on the specific software you are using.
 
 <!-- CONTRIBUTING -->
