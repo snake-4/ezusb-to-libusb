@@ -2,6 +2,7 @@
 #include <detours/detours.h>
 #include <libusb-1.0/libusb.h>
 #include <optional>
+#include <utility>
 #include "Hooks.h"
 #include "Globals.h"
 #include "Config.h"
@@ -11,7 +12,7 @@
 HandleManager_t GHandleManager;
 libusb_context* GLibUsbCtx = nullptr;
 std::optional<LIBUSBDevice> GUSBDev;
-Configuration_t GConfig = Configuration_t::LoadFromIniFile("eu2lu_config.ini");
+Configuration_t GConfig = Configuration_t::LoadFromJsonFile("eu2lu_config.json");
 
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 {
@@ -39,10 +40,17 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 		}
 
 		libusb_init(&GLibUsbCtx);
-		GUSBDev.emplace(
-			GConfig.USBVID, GConfig.USBPID, GConfig.USBTimeoutMS, GConfig.USBConfigIndex,
-			EZUSB::USB_INTERFACE_INDEX, EZUSB::USB_INTERFACE_ALTERNATE_SETTING
-		);
+
+		for (const auto& entry : GConfig.USBSearchList)
+		{
+			LIBUSBDevice dev(entry.VID, entry.PID, GConfig.USBTimeoutMS,
+				EZUSB::USB_CONFIG_INDEX, EZUSB::USB_INTERFACE_INDEX, EZUSB::USB_INTERFACE_ALTERNATE_SETTING);
+
+			if (dev.IsConnected()) {
+				GUSBDev.emplace(std::move(dev));
+				break;
+			}
+		}
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
 	{

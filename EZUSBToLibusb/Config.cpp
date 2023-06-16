@@ -1,46 +1,97 @@
 #include <Windows.h>
 #include <string>
+#include <string_view>
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 #include "Config.h"
 
-//codecvt was deprecated ;(
-static std::string ConvertWideToANSI(const std::wstring& wstr);
-static std::wstring ConvertAnsiToWide(const std::string& str);
+static long JSONGetNumber(const nlohmann::json& json, long defaultValue);
 
-Configuration_t::Configuration_t(int usbVID, int usbPID, int usbConfigIndex, int usbTimeoutMS, int debug, const std::string& ezusbDriverPath)
-	: USBVID(usbVID), USBPID(usbPID), USBConfigIndex(usbConfigIndex), USBTimeoutMS(usbTimeoutMS), Debug(debug), EZUSBDriverPath(ezusbDriverPath) { }
-
-Configuration_t Configuration_t::LoadFromIniFile(const std::string& iniFileName)
+Configuration_t::USBSearchListEntry::USBSearchListEntry(int VID, int PID)
+	: VID(VID), PID(PID)
 {
-	wchar_t modulePath[MAX_PATH];
-	GetModuleFileNameW(nullptr, modulePath, MAX_PATH);
-	std::wstring moduleDir = modulePath;
-	moduleDir = moduleDir.substr(0, moduleDir.find_last_of(L'\\'));
-	std::wstring iniFilePath = moduleDir + L"\\" + ConvertAnsiToWide(iniFileName);
-
-	int usbVID = static_cast<int>(GetPrivateProfileIntW(L"Configuration", L"USBVID", 0, iniFilePath.c_str()));
-	int usbPID = static_cast<int>(GetPrivateProfileIntW(L"Configuration", L"USBPID", 0, iniFilePath.c_str()));
-	int usbConfigIndex = static_cast<int>(GetPrivateProfileIntW(L"Configuration", L"USBConfigIndex", 0, iniFilePath.c_str()));
-	int usbTimeoutMS = static_cast<int>(GetPrivateProfileIntW(L"Configuration", L"USBTimeoutMS", 10000, iniFilePath.c_str()));
-
-	wchar_t ezusbDriverPath[MAX_PATH];
-	GetPrivateProfileStringW(L"Configuration", L"EZUSBDriverPath", L"\\\\.\\Ezusb-0", ezusbDriverPath, MAX_PATH, iniFilePath.c_str());
-	int debug = static_cast<int>(GetPrivateProfileIntW(L"Configuration", L"Debug", 0, iniFilePath.c_str()));
-
-	return Configuration_t(usbVID, usbPID, usbConfigIndex, usbTimeoutMS, debug, ConvertWideToANSI(ezusbDriverPath));
 }
 
-static std::string ConvertWideToANSI(const std::wstring& wstr)
+Configuration_t::USBSearchListEntry::USBSearchListEntry(int VID, int PID, std::string_view SerialNumber)
+	: VID(VID), PID(PID), SerialNumber(SerialNumber)
 {
-	int count = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
-	std::string str(count, 0);
-	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), -1, &str[0], count, NULL, NULL);
-	return str;
 }
 
-static std::wstring ConvertAnsiToWide(const std::string& str)
+Configuration_t::Configuration_t()
+	: USBTimeoutMS(0), Debug(0)
 {
-	int count = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), NULL, 0);
-	std::wstring wstr(count, 0);
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), &wstr[0], count);
-	return wstr;
+}
+
+Configuration_t::Configuration_t(int USBTimeoutMS, int Debug, std::string_view EZUSBDriverPath, std::vector<USBSearchListEntry> USBSearchList)
+	: USBTimeoutMS(USBTimeoutMS), Debug(Debug), EZUSBDriverPath(EZUSBDriverPath), USBSearchList(USBSearchList)
+{
+}
+
+Configuration_t Configuration_t::LoadFromJsonFile(const std::string& jsonFileName)
+{
+	std::ifstream file(jsonFileName);
+	nlohmann::json jsonData;
+	file >> jsonData;
+
+	int usbTimeoutMS = 10000;
+	if (jsonData.contains("USBTimeoutMS"))
+		usbTimeoutMS = JSONGetNumber(jsonData["USBTimeoutMS"], usbTimeoutMS);
+
+	int debug = 0;
+	if (jsonData.contains("Debug"))
+		debug = JSONGetNumber(jsonData["Debug"], debug);
+
+	std::string ezusbDriverPath = "\\\\.\\Ezusb-0";
+	if (jsonData.contains("EZUSBDriverPath") && jsonData["EZUSBDriverPath"].is_string())
+		ezusbDriverPath = jsonData["EZUSBDriverPath"];
+
+	std::vector<Configuration_t::USBSearchListEntry> searchList;
+
+	try {
+		for (const auto& entry : jsonData["USBSearchList"])
+		{
+			int vid = JSONGetNumber(entry["VID"], 0);
+			int pid = JSONGetNumber(entry["PID"], 0);
+
+			if (entry.contains("SerialNumber")
+				&& entry["SerialNumber"].is_string()
+				&& !entry["SerialNumber"].get<std::string>().empty())
+				searchList.emplace_back(vid, pid, entry["SerialNumber"]);
+			else
+				searchList.emplace_back(vid, pid);
+		}
+	}
+	catch (std::exception& exc) {
+		std::cout << "Error: Caught an exception while parsing the config \"" << exc.what() << "\"\n";
+	}
+
+	if (searchList.empty()) {
+		std::cout << "Error: USBSearchList is empty.\n";
+	}
+
+	return Configuration_t(usbTimeoutMS, debug, ezusbDriverPath, searchList);
+}
+
+long JSONGetNumber(const nlohmann::json& json, long defaultValue)
+{
+	if (json.is_number()) {
+		return json.get<long>();
+	}
+	if (json.is_string()) {
+		auto str = json.get<std::string>();
+		try {
+			//Try hex
+			return std::stol(str, nullptr, 16);
+		}
+		catch (std::exception&) {}
+
+		try {
+			//Try decimal
+			return std::stol(str, nullptr, 10);
+		}
+		catch (std::exception&) {}
+	}
+
+	return defaultValue;
 }
