@@ -79,10 +79,7 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_VENDOR_REQUEST(LPVOID inBuffer, DWORD inB
 			req->bRequest, req->wValue, req->wIndex, writeBuffer.data(), req->wLength);
 	}
 
-	if (status > 0)
-		return { ERROR_SUCCESS, static_cast<DWORD>(status) }; //lpBytesReturned is only set if not 0
-	else
-		return ERROR_SUCCESS;
+	return ERROR_SUCCESS;
 }
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_READ(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
@@ -162,13 +159,13 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_GET_DRIVER_VERSION(LPVOID inBuffer, DWORD
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_GET_CURRENT_CONFIG(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
 {
-	return { ERROR_SUCCESS, static_cast<DWORD>(0) };
+	return ERROR_SUCCESS;
 }
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_SET_FEATURE(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
 {
 	if (inBufferLen != sizeof(SET_FEATURE_CONTROL))
-		return { ERROR_INVALID_PARAMETER, static_cast<DWORD>(0) }; //lpBytesReturned is set to 0
+		return ERROR_INVALID_PARAMETER; //lpBytesReturned is set to 0
 
 	auto req = (PSET_FEATURE_CONTROL)inBuffer;
 

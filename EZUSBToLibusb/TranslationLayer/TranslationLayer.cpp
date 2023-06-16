@@ -45,8 +45,8 @@ DWORD TL::TranslateIOTCL(GHandleManager_t::handle_t handle, DWORD dwIOCTL, LPVOI
 
 	auto result = it->second(lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize);
 
-	if (lpBytesReturned != NULL && result.bytesReturned.has_value()) {
-		*lpBytesReturned = result.bytesReturned.value();
+	if (lpBytesReturned != NULL) {
+		*lpBytesReturned = result.bytesReturned.value_or(0);
 	}
 	return result.error;
 }
