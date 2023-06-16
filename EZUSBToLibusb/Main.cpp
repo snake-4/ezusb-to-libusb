@@ -43,11 +43,11 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 
 		for (const auto& entry : GConfig.USBSearchList)
 		{
-			LIBUSBDevice dev(entry.VID, entry.PID, GConfig.USBTimeoutMS,
+			auto dev = LIBUSBDevice::OpenDevice(entry.VID, entry.PID, GConfig.USBTimeoutMS,
 				EZUSB::USB_CONFIG_INDEX, EZUSB::USB_INTERFACE_INDEX, EZUSB::USB_INTERFACE_ALTERNATE_SETTING);
 
-			if (dev.IsConnected()) {
-				GUSBDev.emplace(std::move(dev));
+			if (dev.has_value()) {
+				GUSBDev = dev;
 				break;
 			}
 		}
@@ -59,7 +59,8 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 		DetachHooks();
 		DetourTransactionCommit();
 
-		libusb_exit(GLibUsbCtx);
+		//libusb_exit must be called after all USB objects are destructured
+		//libusb_exit(GLibUsbCtx);
 	}
 	return TRUE;
 }
