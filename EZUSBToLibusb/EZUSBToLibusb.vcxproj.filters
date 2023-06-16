@@ -5,13 +5,17 @@
     <ClCompile Include="WinmmExports.cpp" />
     <ClCompile Include="Hooks.cpp" />
     <ClCompile Include="LibusbDevice.cpp" />
-    <ClCompile Include="TranslationLayer.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="TranslationLayer\TranslationLayer.cpp">
+      <Filter>TranslationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="TranslationLayer\IOCTLHandlers.cpp">
+      <Filter>TranslationLayer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hooks.h" />
-    <ClInclude Include="TranslationLayer.h" />
     <ClInclude Include="HandleManager.h" />
     <ClInclude Include="LibusbDevice.h" />
     <ClInclude Include="EZUSB\ezusbsys_internal.h">
@@ -23,10 +27,19 @@
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="TranslationLayer\TranslationLayer.h">
+      <Filter>TranslationLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="TranslationLayer\IOCTLHandlers.h">
+      <Filter>TranslationLayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="EZUSB">
       <UniqueIdentifier>{15d15206-47e6-4cfe-80ef-b3098cd06fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TranslationLayer">
+      <UniqueIdentifier>{389f2c85-13d7-4a47-88a7-004b476a7a26}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

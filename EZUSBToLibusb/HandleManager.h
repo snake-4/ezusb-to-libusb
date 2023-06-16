@@ -26,4 +26,4 @@ private:
 	std::unordered_map<handle_t, T> handles;
 };
 
-
+using GHandleManager_t = HandleManager<std::nullptr_t>;

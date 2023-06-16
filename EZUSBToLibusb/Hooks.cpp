@@ -2,7 +2,7 @@
 #include <cstring>
 #include <detours/detours.h>
 #include "Hooks.h"
-#include "TranslationLayer.h"
+#include "TranslationLayer/TranslationLayer.h"
 #include "Globals.h"
 
 HANDLE(WINAPI* origCreateFileA)(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE) = CreateFileA;

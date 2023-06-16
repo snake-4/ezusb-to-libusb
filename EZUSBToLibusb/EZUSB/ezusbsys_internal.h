@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // File:      ezusbsys.h
-// $Archive: /USB/Util/EzMr/ezusbsys.h $
+// $Archive: /USB/Drivers/ezusbdrv/ezusbsys.h $
 //
 // Purpose:
 //    Header file for the Ezusb USB Device Driver
@@ -9,23 +9,43 @@
 // Environment:
 //    kernel mode
 //
-// $Author: Tpm $
+// $Author: Mdn $
 //
 // $History: ezusbsys.h $           
 //  
+//  *****************  Version 5  *****************
+//  User: Mdn          Date: 10/06/00   Time: 10:08a
+//  Updated in $/USB/Drivers/ezusbdrv
+//  Added IOCTL_EZUSB_SET_FEATURE
+//  
+//  *****************  Version 4  *****************
+//  User: Mdn          Date: 8/17/00    Time: 9:46a
+//  Updated in $/USB/Drivers/ezusbdrv
+//  added a generic get descriptor function.
+//  
 //  *****************  Version 3  *****************
-//  User: Tpm          Date: 8/08/00    Time: 2:26p
-//  Updated in $/USB/Util/EzMr
-//  Updated rev.
+//  User: Mdn          Date: 8/04/00    Time: 11:40a
+//  Updated in $/USB/Drivers/ezmon
+//  added support for monitor download to FX2
 //  
 //  *****************  Version 2  *****************
-//  User: Tpm          Date: 7/19/00    Time: 5:38p
-//  Updated in $/USB/Util/EzMr
-//  Update Copyright to say Cypress instead of Anchor.
+//  User: Mdn          Date: 7/21/00    Time: 4:27p
+//  Updated in $/USB/Drivers/ezusbdrv
+//  Added a Started flag to the device extension.  This flag gets set after
+//  the device has successfully Started.  It is used to prevent a potential
+//  race condition where an application could get a handle (with
+//  CreateFile()) before the device is completely enumerated.
 //  
 //  *****************  Version 1  *****************
-//  User: Tpm          Date: 5/24/00    Time: 3:24p
-//  Created in $/USB/Util/EzMr
+//  User: Tpm          Date: 6/09/00    Time: 6:32p
+//  Created in $/USB/Drivers/ezusbdrv
+//  
+//  *****************  Version 30  *****************
+//  User: Tpm          Date: 3/14/00    Time: 4:14p
+//  Updated in $/EzUsb/Examples/Unsupported/EzMr
+//  Added commets:
+//  DEVIOCTL.H is a Microsoft header file.
+//  DEVIOCTL.H is normally obtained by installing the Windows DDK.
 //  
 //  *****************  Version 29  *****************
 //  User: Markm        Date: 5/18/99    Time: 3:37p
@@ -179,8 +199,8 @@
 //  Updated in $/EZUSB/ezusb driver
 //  Added Reset Pipe IOCTL
 //  
-// Copyright (c) 2000 Cypress Semiconductor. May not be reproduced without permission.
-// See the license agreement for more details.
+// Copyright (c) 1997 Anchor Chips, Inc.  May not be reproduced without
+// permission.  See the license agreement for more details.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -192,9 +212,10 @@
 #define ANCHOR_LOAD_INTERNAL  0xA0
 
 //
-// This command is not implemented in the core.  Requires firmware
+// These commands are not implemented in the core.  Requires firmware
 //
 #define ANCHOR_LOAD_EXTERNAL  0xA3
+#define ANCHOR_ISFX2          0xAC
 
 //
 // This is the highest internal RAM address for the AN2131Q
@@ -205,7 +226,8 @@
 //
 // EZ-USB Control and Status Register.  Bit 0 controls 8051 reset
 //
-#define CPUCS_REG    0x7F92
+#define CPUCS_REG_EZUSB    0x7F92
+#define CPUCS_REG_FX2      0xE600
 
 
 #ifndef _BYTE_DEFINED
@@ -226,7 +248,7 @@ typedef struct _VENDOR_REQUEST_IN
     WORD    wLength;
     BYTE    direction;
     BYTE    bData;
-} VENDOR_REQUEST_IN, *PVENDOR_REQUEST_IN;
+} VENDOR_REQUEST_IN, * PVENDOR_REQUEST_IN;
 
 ///////////////////////////////////////////////////////////
 //
@@ -235,15 +257,15 @@ typedef struct _VENDOR_REQUEST_IN
 ///////////////////////////////////////////////////////////
 typedef struct _BULK_TRANSFER_CONTROL
 {
-   ULONG pipeNum;
-} BULK_TRANSFER_CONTROL, *PBULK_TRANSFER_CONTROL;
+    ULONG pipeNum;
+} BULK_TRANSFER_CONTROL, * PBULK_TRANSFER_CONTROL;
 
 typedef struct _BULK_LATENCY_CONTROL
 {
-   ULONG bulkPipeNum;
-   ULONG intPipeNum;
-   ULONG loops;
-} BULK_LATENCY_CONTROL, *PBULK_LATENCY_CONTROL;
+    ULONG bulkPipeNum;
+    ULONG intPipeNum;
+    ULONG loops;
+} BULK_LATENCY_CONTROL, * PBULK_LATENCY_CONTROL;
 
 
 ///////////////////////////////////////////////////////////
@@ -253,17 +275,17 @@ typedef struct _BULK_LATENCY_CONTROL
 ///////////////////////////////////////////////////////////
 typedef struct _ISO_LOOPBACK_CONTROL
 {
-   // iso pipe to write to
-   ULONG outPipeNum;
+    // iso pipe to write to
+    ULONG outPipeNum;
 
-   // iso pipe to read from
-   ULONG inPipeNum;
+    // iso pipe to read from
+    ULONG inPipeNum;
 
-   // amount of data to read/write from/to the pipe each frame.  If not
-   // specified, the MaxPacketSize of the out pipe is used.
-   ULONG packetSize;
+    // amount of data to read/write from/to the pipe each frame.  If not
+    // specified, the MaxPacketSize of the out pipe is used.
+    ULONG packetSize;
 
-} ISO_LOOPBACK_CONTROL, *PISO_LOOPBACK_CONTROL;
+} ISO_LOOPBACK_CONTROL, * PISO_LOOPBACK_CONTROL;
 
 ///////////////////////////////////////////////////////////
 //
@@ -273,23 +295,29 @@ typedef struct _ISO_LOOPBACK_CONTROL
 ///////////////////////////////////////////////////////////
 typedef struct _VENDOR_OR_CLASS_REQUEST_CONTROL
 {
-   // transfer direction (0=host to device, 1=device to host)
-   UCHAR direction;
+    // transfer direction (0=host to device, 1=device to host)
+    UCHAR direction;
 
-   // request type (1=class, 2=vendor)
-   UCHAR requestType;
+    // request type (1=class, 2=vendor)
+    UCHAR requestType;
 
-   // recipient (0=device,1=interface,2=endpoint,3=other)
-   UCHAR recepient;
-   //
-   // see the USB Specification for an explanation of the
-   // following paramaters.
-   //
-   UCHAR requestTypeReservedBits;
-   UCHAR request;
-   USHORT value;
-   USHORT index;
-} VENDOR_OR_CLASS_REQUEST_CONTROL, *PVENDOR_OR_CLASS_REQUEST_CONTROL;
+    // recipient (0=device,1=interface,2=endpoint,3=other)
+    UCHAR recepient;
+    //
+    // see the USB Specification for an explanation of the
+    // following paramaters.
+    //
+    UCHAR requestTypeReservedBits;
+    UCHAR request;
+    USHORT value;
+    USHORT index;
+} VENDOR_OR_CLASS_REQUEST_CONTROL, * PVENDOR_OR_CLASS_REQUEST_CONTROL;
+
+typedef struct _SET_FEATURE_CONTROL
+{
+    USHORT FeatureSelector;
+    USHORT Index;
+} SET_FEATURE_CONTROL, * PSET_FEATURE_CONTROL;
 
 ///////////////////////////////////////////////////////////
 //
@@ -298,32 +326,32 @@ typedef struct _VENDOR_OR_CLASS_REQUEST_CONTROL
 ///////////////////////////////////////////////////////////
 typedef struct _ISO_TRANSFER_CONTROL
 {
-   //
-   // pipe number to perform the ISO transfer to/from.  Direction is
-   // implied by the pipe number.
-   //
-   ULONG PipeNum;
-   //
-   // ISO packet size.  Determines how much data is transferred each
-   // frame.  Should be less than or equal to the maxpacketsize for
-   // the endpoint.
-   //
-   ULONG PacketSize;
-   //
-   // Total number of ISO packets to transfer.
-   //
-   ULONG PacketCount;
-   //
-   // The following two parameters detmine how buffers are managed for
-   // an ISO transfer.  In order to maintain an ISO stream, the driver
-   // must create at least 2 transfer buffers and ping pong between them.
-   // BufferCount determines how many buffers the driver creates to ping
-   // pong between.  FramesPerBuffer specifies how many USB frames of data
-   // are transferred by each buffer.
-   //
-   ULONG FramesPerBuffer;     // 10 is a good value
-   ULONG BufferCount;         // 2 is a good value
-} ISO_TRANSFER_CONTROL, *PISO_TRANSFER_CONTROL;
+    //
+    // pipe number to perform the ISO transfer to/from.  Direction is
+    // implied by the pipe number.
+    //
+    ULONG PipeNum;
+    //
+    // ISO packet size.  Determines how much data is transferred each
+    // frame.  Should be less than or equal to the maxpacketsize for
+    // the endpoint.
+    //
+    ULONG PacketSize;
+    //
+    // Total number of ISO packets to transfer.
+    //
+    ULONG PacketCount;
+    //
+    // The following two parameters detmine how buffers are managed for
+    // an ISO transfer.  In order to maintain an ISO stream, the driver
+    // must create at least 2 transfer buffers and ping pong between them.
+    // BufferCount determines how many buffers the driver creates to ping
+    // pong between.  FramesPerBuffer specifies how many USB frames of data
+    // are transferred by each buffer.
+    //
+    ULONG FramesPerBuffer;     // 10 is a good value
+    ULONG BufferCount;         // 2 is a good value
+} ISO_TRANSFER_CONTROL, * PISO_TRANSFER_CONTROL;
 
 
 ///////////////////////////////////////////////////////////
@@ -333,84 +361,84 @@ typedef struct _ISO_TRANSFER_CONTROL
 ///////////////////////////////////////////////////////////
 typedef struct _ANCHOR_DOWNLOAD_CONTROL
 {
-   WORD Offset;
-} ANCHOR_DOWNLOAD_CONTROL, *PANCHOR_DOWNLOAD_CONTROL;
+    WORD Offset;
+} ANCHOR_DOWNLOAD_CONTROL, * PANCHOR_DOWNLOAD_CONTROL;
 
 #define MAX_INTEL_HEX_RECORD_LENGTH 16
 
 typedef struct _INTEL_HEX_RECORD
 {
-   BYTE  Length;
-   WORD  Address;
-   BYTE  Type;
-   BYTE  Data[MAX_INTEL_HEX_RECORD_LENGTH];
-} INTEL_HEX_RECORD, *PINTEL_HEX_RECORD;
+    BYTE  Length;
+    WORD  Address;
+    BYTE  Type;
+    BYTE  Data[MAX_INTEL_HEX_RECORD_LENGTH];
+} INTEL_HEX_RECORD, * PINTEL_HEX_RECORD;
 
 typedef struct _SET_INTERFACE_IN
 {
-   UCHAR interfaceNum;
-   UCHAR alternateSetting;
-} SET_INTERFACE_IN, *PSET_INTERFACE_IN;
+    UCHAR interfaceNum;
+    UCHAR alternateSetting;
+} SET_INTERFACE_IN, * PSET_INTERFACE_IN;
 
 typedef struct _GET_STRING_DESCRIPTOR_IN
 {
-   UCHAR    Index;
-   USHORT   LanguageId;
-} GET_STRING_DESCRIPTOR_IN, *PGET_STRING_DESCRIPTOR_IN;
+    UCHAR    Index;
+    USHORT   LanguageId;
+} GET_STRING_DESCRIPTOR_IN, * PGET_STRING_DESCRIPTOR_IN;
 
 typedef struct _EZUSB_DRIVER_VERSION
 {
-   WORD     MajorVersion;
-   WORD     MinorVersion;
-   WORD     BuildVersion;
-} EZUSB_DRIVER_VERSION, *PEZUSB_DRIVER_VERSION;
+    WORD     MajorVersion;
+    WORD     MinorVersion;
+    WORD     BuildVersion;
+} EZUSB_DRIVER_VERSION, * PEZUSB_DRIVER_VERSION;
 
 #ifdef DRIVER
 
 typedef struct _RING_BUFFER
 {
-   PUCHAR      inPtr;
-   PUCHAR      outPtr;
-   ULONG       totalSize;
-   ULONG       currentSize;
-   KSPIN_LOCK	spinLock;
-   PUCHAR      buffer;
-} RING_BUFFER, *PRING_BUFFER;
+    PUCHAR      inPtr;
+    PUCHAR      outPtr;
+    ULONG       totalSize;
+    ULONG       currentSize;
+    KSPIN_LOCK	spinLock;
+    PUCHAR      buffer;
+} RING_BUFFER, * PRING_BUFFER;
 
 PRING_BUFFER
 AllocRingBuffer(
-   ULONG    Size
-   );
+    ULONG    Size
+);
 
 VOID
 FreeRingBuffer(
-   PRING_BUFFER   ringBuffer
-   );
+    PRING_BUFFER   ringBuffer
+);
 
 ULONG
 ReadRingBuffer(
-   PRING_BUFFER   ringBuffer,
-   PUCHAR         readBuffer,
-   ULONG          numberOfBytesToRead
-   );
-   
+    PRING_BUFFER   ringBuffer,
+    PUCHAR         readBuffer,
+    ULONG          numberOfBytesToRead
+);
+
 ULONG
 WriteRingBuffer(
-   PRING_BUFFER   ringBuffer,
-   PUCHAR         writeBuffer,
-   ULONG          numberOfBytesToWrite
-   );
+    PRING_BUFFER   ringBuffer,
+    PUCHAR         writeBuffer,
+    ULONG          numberOfBytesToWrite
+);
 
 typedef struct _EZUSB_FIRMWARE
 {
-   // tag contains a string to identify the start of the firmware
-   // image in the driver binary.  Another utilty can then be used
-   // to replace the firmware image inthe driver without requiring
-   // a recompile
-   UCHAR tag[10];
-   ULONG size;
-   UCHAR firmware[];
-} EZUSB_FIRMWARE, *PEZUSB_FIRMWARE;
+    // tag contains a string to identify the start of the firmware
+    // image in the driver binary.  Another utilty can then be used
+    // to replace the firmware image inthe driver without requiring
+    // a recompile
+    UCHAR tag[10];
+    ULONG size;
+    UCHAR firmware[];
+} EZUSB_FIRMWARE, * PEZUSB_FIRMWARE;
 
 // 
 // this is the default number of IRP's to queue for streaming ISO
@@ -424,33 +452,33 @@ typedef struct _EZUSB_FIRMWARE
 //
 #define DEFAULT_ISO_FRAMES_PER_BUFFER 10
 
-typedef struct _ISO_STREAM_OBJECT ISO_STREAM_OBJECT, *PISO_STREAM_OBJECT;
+typedef struct _ISO_STREAM_OBJECT ISO_STREAM_OBJECT, * PISO_STREAM_OBJECT;
 
 typedef struct _ISO_TRANSFER_OBJECT
 {
-   ULONG Frame;
-   PISO_STREAM_OBJECT StreamObject;
-   PURB Urb;
-   PIRP Irp;
-   KEVENT Done;
-} ISO_TRANSFER_OBJECT, *PISO_TRANSFER_OBJECT;
+    ULONG Frame;
+    PISO_STREAM_OBJECT StreamObject;
+    PURB Urb;
+    PIRP Irp;
+    KEVENT Done;
+} ISO_TRANSFER_OBJECT, * PISO_TRANSFER_OBJECT;
 
 typedef struct _ISO_STREAM_OBJECT
 {
-   PDEVICE_OBJECT DeviceObject;
-   ULONG PacketSize;
-   ULONG NumPackets;
-   PUSBD_PIPE_INFORMATION PipeInfo;
-   PVOID TransferBuffer;
-   ULONG TransferBufferLength;
-   PVOID IsoDescriptorBuffer;
-   ULONG FramesPerBuffer;
-   ULONG BufferCount;
-   ULONG PendingTransfers;
-   PRING_BUFFER DataRingBuffer;
-   PRING_BUFFER DescriptorRingBuffer;
-   PISO_TRANSFER_OBJECT TransferObject;
-} ISO_STREAM_OBJECT, *PISO_STREAM_OBJECT;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG PacketSize;
+    ULONG NumPackets;
+    PUSBD_PIPE_INFORMATION PipeInfo;
+    PVOID TransferBuffer;
+    ULONG TransferBufferLength;
+    PVOID IsoDescriptorBuffer;
+    ULONG FramesPerBuffer;
+    ULONG BufferCount;
+    ULONG PendingTransfers;
+    PRING_BUFFER DataRingBuffer;
+    PRING_BUFFER DescriptorRingBuffer;
+    PISO_TRANSFER_OBJECT TransferObject;
+} ISO_STREAM_OBJECT, * PISO_STREAM_OBJECT;
 
 
 #define Ezusb_NAME_MAX  64
@@ -464,13 +492,13 @@ typedef struct _ISO_STREAM_OBJECT
 // to use this structure as an example or model.
 //
 typedef struct _EZUSB_PIPE {
-   ULONG Mode;
-   ULONG Option;
-   ULONG Param1;
-   ULONG Param2;
-   WCHAR Name[Ezusb_NAME_MAX];
-   PUSBD_PIPE_INFORMATION PipeInfo;
-} EZUSB_PIPE, *PEZUSB_PIPE;
+    ULONG Mode;
+    ULONG Option;
+    ULONG Param1;
+    ULONG Param2;
+    WCHAR Name[Ezusb_NAME_MAX];
+    PUSBD_PIPE_INFORMATION PipeInfo;
+} EZUSB_PIPE, * PEZUSB_PIPE;
 
 
 /*
@@ -488,60 +516,64 @@ typedef struct _EZUSB_PIPE {
 typedef struct _DEVICE_EXTENSION
 {
 
-   // physical device object
-   PDEVICE_OBJECT PhysicalDeviceObject;        
+    // physical device object
+    PDEVICE_OBJECT PhysicalDeviceObject;
 
-   // Device object we call when submitting Urbs/Irps to the USB stack
-   PDEVICE_OBJECT		StackDeviceObject;		
+    // Device object we call when submitting Urbs/Irps to the USB stack
+    PDEVICE_OBJECT		StackDeviceObject;
 
-   // Indicates that we have recieved a STOP message
-   BOOLEAN Stopped;
+    // Indicates that we have recieved a STOP message
+    BOOLEAN Stopped;
 
-   // Indicates the device needs to be cleaned up (ie., some configuration
-   // has occurred and needs to be torn down).
-   BOOLEAN NeedCleanup;
+    // Indicates that we are enumerated and configured.  Used to hold
+    // of requests until we are ready for them
+    BOOLEAN Started;
 
-   // configuration handle for the configuration the
-   // device is currently in
-   USBD_CONFIGURATION_HANDLE ConfigurationHandle;
+    // Indicates the device needs to be cleaned up (ie., some configuration
+    // has occurred and needs to be torn down).
+    BOOLEAN NeedCleanup;
 
-   // ptr to the USB device descriptor
-   // for this device
-   PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
+    // configuration handle for the configuration the
+    // device is currently in
+    USBD_CONFIGURATION_HANDLE ConfigurationHandle;
 
-   // we support up to one interface
-   PUSBD_INTERFACE_INFORMATION Interface;
+    // ptr to the USB device descriptor
+    // for this device
+    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
 
-   // the number of device handles currently open to the device object.
-   // Gets incremented by Create and decremented by Close
-   ULONG                OpenHandles;
+    // we support up to one interface
+    PUSBD_INTERFACE_INFORMATION Interface;
 
-   // Name buffer for our named Functional device object link
-   WCHAR DeviceLinkNameBuffer[Ezusb_NAME_MAX];
+    // the number of device handles currently open to the device object.
+    // Gets incremented by Create and decremented by Close
+    ULONG                OpenHandles;
 
-   // This member is used to store the URB status of the
-   // most recently failed URB.  If a USB transfer fails, a caller
-   // can use IOCTL_EZUSB_GET_LAST_ERROR to retrieve this value.
-   // There's only room for one, so you better get it quick (or at
-   // least before the next URB failure occurs).
-   USBD_STATUS LastFailedUrbStatus;
+    // Name buffer for our named Functional device object link
+    WCHAR DeviceLinkNameBuffer[Ezusb_NAME_MAX];
 
-   // use counter for the device.  Gets incremented when the driver receives
-   // a request and gets decremented when a request s completed.
-   LONG usage;
+    // This member is used to store the URB status of the
+    // most recently failed URB.  If a USB transfer fails, a caller
+    // can use IOCTL_EZUSB_GET_LAST_ERROR to retrieve this value.
+    // There's only room for one, so you better get it quick (or at
+    // least before the next URB failure occurs).
+    USBD_STATUS LastFailedUrbStatus;
 
-   // this ev gets set when it is ok to remove the device
-	KEVENT evRemove;
+    // use counter for the device.  Gets incremented when the driver receives
+    // a request and gets decremented when a request s completed.
+    LONG usage;
 
-   // TRUE if we're trying to remove this device
-   BOOLEAN removing;
+    // this ev gets set when it is ok to remove the device
+    KEVENT evRemove;
 
-   BOOLEAN StopIsoStream;
+    // TRUE if we're trying to remove this device
+    BOOLEAN removing;
 
-   PRING_BUFFER DataRingBuffer;
-   PRING_BUFFER DescriptorRingBuffer;
+    BOOLEAN StopIsoStream;
 
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+    PRING_BUFFER DataRingBuffer;
+    PRING_BUFFER DescriptorRingBuffer;
+
+} DEVICE_EXTENSION, * PDEVICE_EXTENSION;
 
 
 #if DBG
@@ -559,170 +591,178 @@ NTSTATUS
 Ezusb_Dispatch(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp
-    );
+);
 
 VOID
 Ezusb_Unload(
     IN PDRIVER_OBJECT DriverObject
-    );
+);
 
 NTSTATUS
 Ezusb_StartDevice(
     IN  PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_StopDevice(
     IN  PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_RemoveDevice(
     IN  PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_CallUSBD(
     IN PDEVICE_OBJECT DeviceObject,
     IN PURB Urb
-    );
+);
 
 NTSTATUS
 Ezusb_PnPAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_CreateDeviceObject(
     IN PDRIVER_OBJECT DriverObject,
-    IN PDEVICE_OBJECT *DeviceObject,
+    IN PDEVICE_OBJECT* DeviceObject,
     LONG Instance
-    );
+);
 
 NTSTATUS
 Ezusb_ConfigureDevice(
     IN  PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_Create(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
-    );
+);
 
 NTSTATUS
 Ezusb_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
-    );
+);
 
 NTSTATUS
 Ezusb_Read_Write(
-   IN  PDEVICE_OBJECT DeviceObject,
-   IN  PIRP Irp
-   );
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp
+);
 
 NTSTATUS
 Ezusb_ProcessIOCTL(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
-    );
+);
 
 NTSTATUS
 Ezusb_SelectInterfaces(
     IN PDEVICE_OBJECT DeviceObject,
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     IN PUSBD_INTERFACE_INFORMATION Interface
-    );
+);
 
 NTSTATUS
 Ezusb_ResetPipe(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN ULONG PipeNum
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG PipeNum
+);
 
 NTSTATUS
 Ezusb_AbortPipe(
     IN PDEVICE_OBJECT DeviceObject,
     IN USBD_PIPE_HANDLE PipeHandle
-    );
+);
 
 ULONG
 Ezusb_GetCurrentFrameNumber(
     IN PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 Ezusb_Read_Write_Direct(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  BOOLEAN Read
-    );
+);
 
 ULONG
 Ezusb_DownloadTest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVENDOR_REQUEST_IN pVendorRequest
-    );
+);
 
 NTSTATUS
 Ezusb_ResetParentPort(
     IN IN PDEVICE_OBJECT DeviceObject
-    );
+);
 
 VOID
 Ezusb_Cleanup(
     PDEVICE_OBJECT DeviceObject
-    );
+);
+
+ULONG
+Ezusb_GetDescriptor(
+    IN PDEVICE_OBJECT fdo,
+    PVOID             DescriptorBuffer,
+    ULONG             BufferLength,
+    UCHAR             DescriptorType
+);
 
 ULONG
 Ezusb_GetDeviceDescriptor(
     IN PDEVICE_OBJECT DeviceObject,
     PVOID             pvOutputBuffer
-    );
+);
 
 ULONG
 Ezusb_GetConfigDescriptor(
     IN PDEVICE_OBJECT DeviceObject,
     PVOID             pvOutputBuffer,
     ULONG             ulngth
-    );
+);
 
 ULONG
 Ezusb_VendorRequest(
     IN PDEVICE_OBJECT DeviceObject,
     PVENDOR_REQUEST_IN pVendorRequest
-    );
+);
 
 ULONG
 Ezusb_GetCurrentConfig(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVENDOR_REQUEST_IN pVendorRequest
-    );
+);
 
 ULONG
 Ezusb_GetCurrentInterface(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVENDOR_REQUEST_IN pVendorRequest
-    );
+);
 
 PUSB_CONFIGURATION_DESCRIPTOR
 GetConfigDescriptor(
     IN PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 ConfigureDevice(
     IN  PDEVICE_OBJECT DeviceObject
-    );
+);
 
 NTSTATUS
 SetInterface(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN UCHAR InterfaceNumber,
-   IN UCHAR AlternateSetting
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR InterfaceNumber,
+    IN UCHAR AlternateSetting
+);
 
 ULONG
 Ezusb_GetStringDescriptor(
@@ -731,114 +771,123 @@ Ezusb_GetStringDescriptor(
     USHORT            LanguageId,
     PVOID             pvOutputBuffer,
     ULONG             ulLength
-    );
+);
 
 NTSTATUS
 Ezusb_VendorRequest2(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
 
 
 NTSTATUS
 ForwardAndWait(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
 
 
 NTSTATUS
 Ezusb_DefaultPnpHandler(
-   IN PDEVICE_OBJECT fdo,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT fdo,
+    IN PIRP Irp
+);
 
 
 NTSTATUS
 Ezusb_DispatchPnp(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN PIRP           Irp
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP           Irp
+);
 
 NTSTATUS
 Ezusb_DispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp
-    );
+);
 
 NTSTATUS
 Ezusb_HandleStartDevice(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
 
 NTSTATUS
 Ezusb_HandleRemoveDevice(
-   IN PDEVICE_OBJECT fdo,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT fdo,
+    IN PIRP Irp
+);
 
-NTSTATUS 
+NTSTATUS
 OnRequestComplete(
-   IN PDEVICE_OBJECT DeviceObject,
-   IN PIRP Irp,
-   IN PKEVENT pev
-   );
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PKEVENT pev
+);
 
 NTSTATUS
 CompleteRequest(
-   IN PIRP Irp,
-   IN NTSTATUS status,
-   IN ULONG info
-   );
+    IN PIRP Irp,
+    IN NTSTATUS status,
+    IN ULONG info
+);
 
 BOOLEAN LockDevice(
-   IN PDEVICE_OBJECT fdo
-   );
+    IN PDEVICE_OBJECT fdo
+);
 
 void UnlockDevice(
-   PDEVICE_OBJECT fdo
-   );
+    PDEVICE_OBJECT fdo
+);
 
 
 NTSTATUS InitTransferObject(
-   IN OUT PISO_STREAM_OBJECT streamObject,
-   IN ULONG index
-   );
+    IN OUT PISO_STREAM_OBJECT streamObject,
+    IN ULONG index
+);
 
 NTSTATUS Ezusb_StartIsoTransfer(
-   IN PDEVICE_OBJECT fdo,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT fdo,
+    IN PIRP Irp
+);
 
 NTSTATUS IsoTransferComplete(
-   IN PDEVICE_OBJECT fdo,
-   IN PIRP Irp,
-   IN PVOID Context
-   );
+    IN PDEVICE_OBJECT fdo,
+    IN PIRP Irp,
+    IN PVOID Context
+);
 
 
 NTSTATUS Ezusb_AnchorDownload(
-   PDEVICE_OBJECT fdo,
-   WORD offset,
-   PUCHAR downloadBuffer,
-   ULONG downloadSize
-   );
+    PDEVICE_OBJECT fdo,
+    WORD offset,
+    PUCHAR downloadBuffer,
+    ULONG downloadSize
+);
 
 NTSTATUS Ezusb_DownloadIntelHex(
-   PDEVICE_OBJECT fdo,
-   PINTEL_HEX_RECORD hexRecord
-   );
+    PDEVICE_OBJECT fdo,
+    PINTEL_HEX_RECORD hexRecord
+);
 
 NTSTATUS Ezusb_8051Reset(
-   PDEVICE_OBJECT fdo,
-   UCHAR resetBit
-   );
+    PDEVICE_OBJECT fdo,
+    UCHAR resetBit
+);
 
 NTSTATUS Ezusb_StartIsoStream(
-   IN PDEVICE_OBJECT fdo,
-   IN PIRP Irp
-   );
+    IN PDEVICE_OBJECT fdo,
+    IN PIRP Irp
+);
+
+BOOLEAN IsFx2(
+    IN  PDEVICE_OBJECT fdo
+);
+
+NTSTATUS Ezusb_SetFeature(
+    IN PDEVICE_OBJECT fdo,
+    IN PSET_FEATURE_CONTROL setFeatureControl
+);
 
 #endif      //DRIVER section
 
@@ -852,7 +901,8 @@ NTSTATUS Ezusb_StartIsoStream(
 //
 // Note: this file depends on the file DEVIOCTL.H which contains the macro
 // definition for "CTL_CODE" below.  Include that file before  you include
-// this one in your source code.
+// this one in your source code. DEVIOCTL.H is a Microsoft header file.
+// DEVIOCTL.H is normally obtained by installing the Windows DDK.
 //
 ///////////////////////////////////////////////////////
 
@@ -1090,4 +1140,9 @@ NTSTATUS Ezusb_StartIsoStream(
 #define IOCTL_EZUSB_READ_ISO_BUFFER     CTL_CODE(FILE_DEVICE_UNKNOWN,  \
                                                    Ezusb_IOCTL_INDEX+32,\
                                                    METHOD_OUT_DIRECT,  \
+                                                   FILE_ANY_ACCESS)
+
+#define IOCTL_EZUSB_SET_FEATURE         CTL_CODE(FILE_DEVICE_UNKNOWN,  \
+                                                   Ezusb_IOCTL_INDEX+33,\
+                                                   METHOD_BUFFERED,  \
                                                    FILE_ANY_ACCESS)

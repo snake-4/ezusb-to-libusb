@@ -22,7 +22,8 @@
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Hooks.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="TranslationLayer.cpp" />
+    <ClCompile Include="TranslationLayer\IOCTLHandlers.cpp" />
+    <ClCompile Include="TranslationLayer\TranslationLayer.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="WinmmExports.cpp" />
     <ClCompile Include="LibusbDevice.cpp" />
@@ -35,7 +36,8 @@
     <ClInclude Include="HandleManager.h" />
     <ClInclude Include="Hooks.h" />
     <ClInclude Include="LibusbDevice.h" />
-    <ClInclude Include="TranslationLayer.h" />
+    <ClInclude Include="TranslationLayer\IOCTLHandlers.h" />
+    <ClInclude Include="TranslationLayer\TranslationLayer.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

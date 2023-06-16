@@ -9,7 +9,7 @@
 #include "Utils.h"
 #include "EZUSB/ezusb.h"
 
-HandleManager_t GHandleManager;
+GHandleManager_t GHandleManager;
 libusb_context* GLibUsbCtx = nullptr;
 std::optional<LIBUSBDevice> GUSBDev;
 Configuration_t GConfig = Configuration_t::LoadFromJsonFile("eu2lu_config.json");
