@@ -131,6 +131,7 @@ int LIBUSBDevice::ResetEndpoint(int pipeNum) {
 	if (endpointAddress == -1)
 		return LIBUSB_ERROR_INVALID_PARAM;
 
+	//Does this not clear data toggle?
 	return libusb_clear_halt(handle->val, endpointAddress);
 }
 

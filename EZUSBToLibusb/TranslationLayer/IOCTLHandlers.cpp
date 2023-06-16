@@ -211,6 +211,19 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_RESETPIPE(LPVOID inBuffer, DWORD inBuffer
 
 	auto pEndpoint = (PULONG)inBuffer;
 
+	//I think this reset actually behaves more like URB_FUNCTION_ABORT_PIPE
+	//because it might not be clearing the data toggle
+	GUSBDev.value().ResetEndpoint(*pEndpoint);
+	return ERROR_SUCCESS;
+}
+
+ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_ABORTPIPE(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
+{
+	if (inBufferLen < sizeof(ULONG)) //EZUSB.sys does not have this check!
+		return ERROR_INVALID_PARAMETER;
+
+	auto pEndpoint = (PULONG)inBuffer;
+
 	GUSBDev.value().ResetEndpoint(*pEndpoint);
 	return ERROR_SUCCESS;
 }
