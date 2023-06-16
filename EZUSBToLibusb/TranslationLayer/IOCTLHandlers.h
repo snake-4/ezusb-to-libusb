@@ -9,6 +9,7 @@ namespace TL {
 	ioctl_hdl_return_t Hdl_IOCTL_Ezusb_VENDOR_REQUEST(LPVOID, DWORD, LPVOID, DWORD);
 	ioctl_hdl_return_t Hdl_IOCTL_Ezusb_ANCHOR_DOWNLOAD(LPVOID, DWORD, LPVOID, DWORD);
 	ioctl_hdl_return_t Hdl_IOCTL_Ezusb_RESET(LPVOID, DWORD, LPVOID, DWORD);
+	ioctl_hdl_return_t Hdl_IOCTL_Ezusb_RESETPIPE(LPVOID, DWORD, LPVOID, DWORD);
 	//Uppercase functions
 	ioctl_hdl_return_t Hdl_IOCTL_EZUSB_ANCHOR_DOWNLOAD(LPVOID, DWORD, LPVOID, DWORD);
 	ioctl_hdl_return_t Hdl_IOCTL_EZUSB_BULK_READ(LPVOID, DWORD, LPVOID, DWORD);

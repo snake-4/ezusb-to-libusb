@@ -19,6 +19,7 @@ public:
 	int WriteBulkTransfer(int pipeNum, const void* buffer, int bufferLength, int* bytesWritten);
 
 	int ResetDevice();
+	int ResetEndpoint(int pipeNum);
 	std::vector<uint8_t> GetStringDescriptor(uint8_t desc_index, uint16_t langid);
 
 private:

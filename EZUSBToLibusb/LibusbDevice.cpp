@@ -66,6 +66,8 @@ int LIBUSBDevice::ReadBulkTransfer(int pipeNum, void* buffer, int bufferLength, 
 	}
 
 	int endpointAddress = GetEndpointAddressByPipeNum(pipeNum);
+	if (endpointAddress == -1)
+		return LIBUSB_ERROR_INVALID_PARAM;
 	return libusb_bulk_transfer(handle->val, endpointAddress,
 		(unsigned char*)buffer, bufferLength, bytesRead, timeout_ms);
 }
@@ -76,6 +78,8 @@ int LIBUSBDevice::WriteBulkTransfer(int pipeNum, const void* buffer, int bufferL
 	}
 
 	int endpointAddress = GetEndpointAddressByPipeNum(pipeNum);
+	if (endpointAddress == -1)
+		return LIBUSB_ERROR_INVALID_PARAM;
 	return libusb_bulk_transfer(handle->val, endpointAddress,
 		(unsigned char*)(buffer), bufferLength, bytesWritten, timeout_ms);
 }
@@ -116,6 +120,18 @@ int LIBUSBDevice::ResetDevice() {
 	}
 
 	return status;
+}
+
+int LIBUSBDevice::ResetEndpoint(int pipeNum) {
+	if (handle == nullptr) {
+		return LIBUSB_ERROR_NO_DEVICE;
+	}
+
+	int endpointAddress = GetEndpointAddressByPipeNum(pipeNum);
+	if (endpointAddress == -1)
+		return LIBUSB_ERROR_INVALID_PARAM;
+
+	return libusb_clear_halt(handle->val, endpointAddress);
 }
 
 int LIBUSBDevice::GetEndpointAddressByPipeNum(int pipeNum) {

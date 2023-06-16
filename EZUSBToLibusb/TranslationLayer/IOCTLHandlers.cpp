@@ -92,7 +92,9 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_READ(LPVOID inBuffer, DWORD inBuffer
 
 	int err = GUSBDev.value().ReadBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesRead);
 
-	if (err != LIBUSB_SUCCESS)
+	if (err == LIBUSB_ERROR_INVALID_PARAM)
+		return ERROR_INVALID_PARAMETER;
+	else if (err != LIBUSB_SUCCESS)
 		return ERROR_GEN_FAILURE;
 	else
 		return { ERROR_SUCCESS, static_cast<DWORD>(bytesRead) };
@@ -108,7 +110,9 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_EZUSB_BULK_WRITE(LPVOID inBuffer, DWORD inBuffe
 
 	int err = GUSBDev.value().WriteBulkTransfer(req->pipeNum, outBuffer, outBufferLen, &bytesWritten);
 
-	if (err != LIBUSB_SUCCESS)
+	if (err == LIBUSB_ERROR_INVALID_PARAM)
+		return ERROR_INVALID_PARAMETER;
+	else if (err != LIBUSB_SUCCESS)
 		return ERROR_GEN_FAILURE;
 	else
 		return { ERROR_SUCCESS, static_cast<DWORD>(bytesWritten) };
@@ -197,5 +201,16 @@ ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_GET_STRING_DESCRIPTOR(LPVOID inBuffer, DW
 ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_RESET(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
 {
 	GUSBDev.value().ResetDevice();
+	return ERROR_SUCCESS;
+}
+
+ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_RESETPIPE(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
+{
+	if (inBufferLen < sizeof(ULONG)) //EZUSB.sys does not have this check!
+		return ERROR_INVALID_PARAMETER;
+
+	auto pEndpoint = (PULONG)inBuffer;
+
+	GUSBDev.value().ResetEndpoint(*pEndpoint);
 	return ERROR_SUCCESS;
 }
