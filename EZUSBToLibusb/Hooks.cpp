@@ -41,6 +41,13 @@ BOOL WINAPI hkDeviceIoControl(HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpIn
 			nOutBufferSize, lpBytesReturned, lpOverlapped);
 	}
 
+	/*
+	* We don't want to miss a call that would be hooked.
+	* So we attach the hooks before the USB init thread could finish.
+	* That's why we have to wait for it here.
+	*/
+	WaitForSingleObject(GUSBInitThread, INFINITE);
+
 	DWORD err = TL::TranslateIOTCL(hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer,
 		nOutBufferSize, lpBytesReturned);
 	if (err != ERROR_SUCCESS) {
