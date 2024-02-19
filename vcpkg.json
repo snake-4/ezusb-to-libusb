@@ -1,10 +1,18 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "name": "ezusb-to-libusb",
-    "version": "0.1",
     "dependencies": [
-        "detours",
-        "libusb",
-        "nlohmann-json"
-    ]
+        {
+            "name": "detours",
+            "version>=": "4.0.1#8"
+        },
+        {
+            "name": "libusb",
+            "version>=": "1.0.26.11791#7"
+        },
+        {
+            "name": "nlohmann-json",
+            "version>=": "3.11.3"
+        }
+    ],
+    "builtin-baseline": "13bde2ff13192e1b2fdd37bd9b475c7665ae6ae5"
 }
