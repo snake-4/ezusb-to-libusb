@@ -2,8 +2,8 @@
 #include <memory>
 #include <optional>
 #include <libusb-1.0/libusb.h>
-#include "Globals.h"
-#include "LibusbDevice.h"
+#include "Globals.hpp"
+#include "LibusbDevice.hpp"
 
 static libusb_device_handle* OpenDeviceByVIDPID(uint16_t vid, uint16_t pid);
 

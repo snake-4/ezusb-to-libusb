@@ -29,16 +29,16 @@
     <ClCompile Include="LibusbDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Config.h" />
+    <ClInclude Include="Config.hpp" />
     <ClInclude Include="EZUSB\ezusbsys_internal.h" />
-    <ClInclude Include="EZUSB\ezusb.h" />
-    <ClInclude Include="Globals.h" />
-    <ClInclude Include="HandleManager.h" />
-    <ClInclude Include="Hooks.h" />
-    <ClInclude Include="LibusbDevice.h" />
-    <ClInclude Include="TranslationLayer\IOCTLHandlers.h" />
-    <ClInclude Include="TranslationLayer\TranslationLayer.h" />
-    <ClInclude Include="Utils.h" />
+    <ClInclude Include="EZUSB\ezusb.hpp" />
+    <ClInclude Include="Globals.hpp" />
+    <ClInclude Include="HandleManager.hpp" />
+    <ClInclude Include="Hooks.hpp" />
+    <ClInclude Include="LibusbDevice.hpp" />
+    <ClInclude Include="TranslationLayer\IOCTLHandlers.hpp" />
+    <ClInclude Include="TranslationLayer\TranslationLayer.hpp" />
+    <ClInclude Include="Utils.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

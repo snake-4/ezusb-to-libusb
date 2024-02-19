@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <Windows.h>
 #include <unordered_map>
-#include "LibusbDevice.h"
+#include "LibusbDevice.hpp"
 
 template <typename T>
 class HandleManager {

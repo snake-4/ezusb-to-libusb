@@ -1,8 +1,8 @@
 #pragma once
 #include <optional>
-#include "LibusbDevice.h"
-#include "HandleManager.h"
-#include "Config.h"
+#include "LibusbDevice.hpp"
+#include "HandleManager.hpp"
+#include "Config.hpp"
 
 extern GHandleManager_t GHandleManager;
 extern libusb_context* GLibUsbCtx;

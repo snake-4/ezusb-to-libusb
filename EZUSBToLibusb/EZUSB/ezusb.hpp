@@ -10,5 +10,8 @@ namespace EZUSB {
 	constexpr int USB_CONFIG_INDEX = 0;
 	constexpr int USB_INTERFACE_INDEX = 0;
 	constexpr int USB_INTERFACE_ALTERNATE_SETTING = 0;
+
+	extern "C" {
 #include "ezusbsys_internal.h"
+	}
 }

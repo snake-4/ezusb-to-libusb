@@ -1,9 +1,9 @@
 #include <Windows.h>
 #include <cstring>
 #include <detours/detours.h>
-#include "Hooks.h"
-#include "TranslationLayer/TranslationLayer.h"
-#include "Globals.h"
+#include "Hooks.hpp"
+#include "TranslationLayer/TranslationLayer.hpp"
+#include "Globals.hpp"
 
 HANDLE(WINAPI* origCreateFileA)(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE) = CreateFileA;
 

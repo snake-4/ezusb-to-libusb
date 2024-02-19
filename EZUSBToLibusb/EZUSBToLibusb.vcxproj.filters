@@ -15,22 +15,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Hooks.h" />
-    <ClInclude Include="HandleManager.h" />
-    <ClInclude Include="LibusbDevice.h" />
+    <ClInclude Include="Hooks.hpp" />
+    <ClInclude Include="HandleManager.hpp" />
+    <ClInclude Include="LibusbDevice.hpp" />
     <ClInclude Include="EZUSB\ezusbsys_internal.h">
       <Filter>EZUSB</Filter>
     </ClInclude>
-    <ClInclude Include="EZUSB\ezusb.h">
+    <ClInclude Include="EZUSB\ezusb.hpp">
       <Filter>EZUSB</Filter>
     </ClInclude>
-    <ClInclude Include="Globals.h" />
-    <ClInclude Include="Config.h" />
-    <ClInclude Include="Utils.h" />
-    <ClInclude Include="TranslationLayer\TranslationLayer.h">
+    <ClInclude Include="Globals.hpp" />
+    <ClInclude Include="Config.hpp" />
+    <ClInclude Include="Utils.hpp" />
+    <ClInclude Include="TranslationLayer\TranslationLayer.hpp">
       <Filter>TranslationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="TranslationLayer\IOCTLHandlers.h">
+    <ClInclude Include="TranslationLayer\IOCTLHandlers.hpp">
       <Filter>TranslationLayer</Filter>
     </ClInclude>
   </ItemGroup>

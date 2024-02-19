@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include "Config.h"
+#include "Config.hpp"
 
 static long JSONGetNumber(const nlohmann::json& json, long defaultValue);
 

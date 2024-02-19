@@ -1,6 +1,6 @@
 #pragma once
 #include <Windows.h>
-#include "TranslationLayer.h"
+#include "TranslationLayer.hpp"
 
 namespace TL {
 	//Lowercase functions

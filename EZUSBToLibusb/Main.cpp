@@ -3,11 +3,11 @@
 #include <libusb-1.0/libusb.h>
 #include <optional>
 #include <utility>
-#include "Hooks.h"
-#include "Globals.h"
-#include "Config.h"
-#include "Utils.h"
-#include "EZUSB/ezusb.h"
+#include "Hooks.hpp"
+#include "Globals.hpp"
+#include "Config.hpp"
+#include "Utils.hpp"
+#include "EZUSB/ezusb.hpp"
 
 GHandleManager_t GHandleManager;
 libusb_context* GLibUsbCtx = nullptr;

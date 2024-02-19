@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <optional>
 #include <functional>
-#include "../HandleManager.h"
+#include "../HandleManager.hpp"
 
 namespace TL {
 	DWORD TranslateIOTCL(GHandleManager_t::handle_t handle, DWORD dwIOCTL, LPVOID lpInBuffer, DWORD nInBufferSize,

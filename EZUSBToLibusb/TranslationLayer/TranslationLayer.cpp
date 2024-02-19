@@ -6,10 +6,10 @@
 #include <functional>
 #include <numeric>
 #include <libusb-1.0/libusb.h>
-#include "../EZUSB/ezusb.h"
-#include "../Globals.h"
-#include "TranslationLayer.h"
-#include "IOCTLHandlers.h"
+#include "../EZUSB/ezusb.hpp"
+#include "../Globals.hpp"
+#include "TranslationLayer.hpp"
+#include "IOCTLHandlers.hpp"
 
 using namespace EZUSB;
 using namespace TL;
