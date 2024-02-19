@@ -146,12 +146,12 @@ int LIBUSBDevice::GetEndpointAddressByPipeNum(int pipeNum) {
 static libusb_device_handle* OpenDeviceByVIDPID(uint16_t vid, uint16_t pid)
 {
 	libusb_device** deviceList;
-	int count = libusb_get_device_list(GLibUsbCtx, &deviceList);
+	ssize_t count = libusb_get_device_list(GLibUsbCtx, &deviceList);
 	if (count < 0) {
 		return nullptr;
 	}
 
-	for (int i = 0; i < count; i++) {
+	for (ssize_t i = 0; i < count; i++) {
 		libusb_device* device = deviceList[i];
 		struct libusb_device_descriptor desc;
 		if (libusb_get_device_descriptor(device, &desc) == LIBUSB_SUCCESS) {
