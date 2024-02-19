@@ -43,8 +43,6 @@ static ioctl_hdl_return_t InternalAnchorDownload(const void* buffer, size_t buff
 
 ioctl_hdl_return_t TL::Hdl_IOCTL_Ezusb_ANCHOR_DOWNLOAD(LPVOID inBuffer, DWORD inBufferLen, LPVOID outBuffer, DWORD outBufferLen)
 {
-	//chunk count is rounded towards 0 in the original code
-	size_t truncatedLength = inBufferLen - (inBufferLen % LowercaseAnchorDownloadChunkSize);
 	return InternalAnchorDownload(inBuffer, inBufferLen, LowercaseAnchorDownloadChunkSize, 0);
 }
 
